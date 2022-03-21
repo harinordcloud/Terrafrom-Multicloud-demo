@@ -9,7 +9,7 @@ variable "prefix" {
 }
 
 variable "azurerm_resource_group" {
-  default = "rg-hariharan-weu"
+  default = "rg-hariharan-natarajan-weu"
 }
 
 variable "azurerm_location" {
