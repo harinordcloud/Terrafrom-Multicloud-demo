@@ -11,26 +11,151 @@ terraform {
   }
 }
 
+
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                   AWS Terrafrom code Start. 
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+
+provider "aws" {
+  region  = "eu-central-1"
+}
+
+module "vpc" {
+  source = "./aws-modules/vpc"
+
+  cidr        = var.vpc_cidr
+  environment = var.environment
+}
+
+module "private_subnet" {
+  source = "./aws-modules/subnet"
+
+  name               = "${var.environment}_private_subnet"
+  environment        = var.environment
+  vpc_id             = module.vpc.id
+  cidrs              = var.private_subnet_cidrs
+  availability_zones = var.availability_zones
+}
+
+module "public_subnet" {
+  source = "./aws-modules/subnet"
+
+  name               = "${var.environment}_public_subnet"
+  environment        = var.environment
+  vpc_id             = module.vpc.id
+  cidrs              = var.public_subnet_cidrs
+  availability_zones = var.availability_zones
+}
+
+module "nat" {
+  source = "./aws-modules/nat_gateway"
+
+  subnet_ids   = module.public_subnet.ids
+  subnet_count = length(var.public_subnet_cidrs)
+}
+
+resource "aws_route" "public_igw_route" {
+  count                  = length(var.public_subnet_cidrs)
+  route_table_id         = element(module.public_subnet.route_table_ids, count.index)
+  gateway_id             = module.vpc.igw
+  destination_cidr_block = var.destination_cidr_block
+}
+
+resource "aws_route" "private_nat_route" {
+  count                  = length(var.private_subnet_cidrs)
+  route_table_id         = element(module.private_subnet.route_table_ids, count.index)
+  nat_gateway_id         = element(module.nat.ids, count.index)
+  destination_cidr_block = var.destination_cidr_block
+}
+
+/* resource "aws_route" "private_peering_route" {
+  count                     = length(var.private_subnet_cidrs)
+  route_table_id            = element(module.private_subnet.route_table_ids, count.index)
+  destination_cidr_block    = var.destination_cidr_block_rds
+  vpc_peering_connection_id = aws_vpc_peering_connection.vpc_to_rds.id
+} */
+
+# Creating a NAT Gateway takes some time. Some services need the internet (NAT Gateway) before proceeding. 
+# Therefore we need a way to depend on the NAT Gateway in Terraform and wait until is finished. 
+# Currently Terraform does not allow module dependency to wait on.
+# Therefore we use a workaround described here: https://github.com/hashicorp/terraform/issues/1178#issuecomment-207369534
+
+resource "null_resource" "dummy_dependency" {
+  depends_on = [module.nat]
+}
+
+
+resource "aws_security_group" "web_sg" {
+  name   = "HTTP and SSH"
+  vpc_id = module.vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.cidr_block]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [module.vpc.cidr_block]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = [module.vpc.cidr_block]
+  }
+}
+
+
+resource "aws_instance" "web_instance" {
+  ami           = "ami-0dcc0ebde7b2e00db"
+  instance_type = "t2.micro"
+  key_name      = "MyKeyPair"
+
+  subnet_id                   = module.public_subnet.ids.0
+  vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  associate_public_ip_address = true
+
+  tags = {
+    "Name" : "Terraform POC - Web Instance"
+  }
+}
+
+
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                   AWS Terrafrom code End. 
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+
+
+
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                 Azure  Terrafrom code Start. 
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+
 provider "azurerm" {
   skip_provider_registration = true 
   features {}
 }
 
-variable "prefix" {
-  default = "tfvmex"
-}
-
-variable "azurerm_resource_group" {
-  default = "rg-hariharan-natarajan-weu"
-}
-
-variable "azurerm_location" {
-  default = "West Europe"
-}
-
-variable "azurerm_location_secondary" {
-  default = "Sweden Central"
-}
 
 
 #------------------------------------------------------------#
@@ -505,3 +630,15 @@ resource "azurerm_sql_database" "example" {
 #------------------------------------------------------------------------------------------------------------------------------#
 #                                  Terrafrom code for secondary region (sweden central).                                       #
 #------------------------------------------------------------------------------------------------------------------------------#
+
+
+
+
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#                                                  Azure  Terrafrom code end. 
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------------------------------------------------#
+
