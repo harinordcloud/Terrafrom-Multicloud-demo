@@ -133,6 +133,67 @@ resource "aws_instance" "web_instance" {
 }
 
 
+# Create a new load balancer
+resource "aws_elb" "bar" {
+  name               = "Website-terraform-elb"
+  availability_zones = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
+
+  access_logs {
+    bucket        = "foo"
+    bucket_prefix = "bar"
+    interval      = 60
+  }
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  health_check {
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    timeout             = 3
+    target              = "HTTP:8000/"
+    interval            = 30
+  }
+
+  instances                   = [aws_instance.web_instance.id]
+  cross_zone_load_balancing   = true
+  idle_timeout                = 400
+  connection_draining         = true
+  connection_draining_timeout = 400
+
+  tags = {
+    Name = "Website-terraform-elb"
+  }
+  depends_on                =  [aws_instance.web_instance]
+}
+
+
+resource "aws_db_subnet_group" "default" {
+  name       = "main"
+  subnet_ids = module.private_subnet.ids
+
+  tags = {
+    Name = "My DB subnet group"
+  }
+}
+
+resource "aws_db_instance" "mysqldb" {
+  allocated_storage    = 10
+  engine               = "mysql"
+  engine_version       = "5.7"
+  instance_class       = "db.t3.micro"
+  name                 = "mydb"
+  username             = "foo"
+  password             = "foobarbaz"
+  parameter_group_name = "default.mysql5.7"
+  skip_final_snapshot  = true
+  db_subnet_group_name = aws_db_subnet_group.default
+}
+
 #---------------------------------------------------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------#
@@ -142,7 +203,7 @@ resource "aws_instance" "web_instance" {
 #---------------------------------------------------------------------------------------------------------------------------------#
 
 
-
+/*
 #---------------------------------------------------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------#
@@ -642,3 +703,4 @@ resource "azurerm_sql_database" "example" {
 #---------------------------------------------------------------------------------------------------------------------------------#
 #---------------------------------------------------------------------------------------------------------------------------------#
 
+*/
