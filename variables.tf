@@ -71,3 +71,13 @@ variable "azurerm_location" {
 variable "azurerm_location_secondary" {
   default = "Sweden Central"
 }
+
+variable "azurerm_sqlserver_administrator_user" {
+description = "Azure SQL server Administrator User name"
+}
+
+variable "azurerm_sqlserver_administrator_password" {
+description = "Azure SQL server Administrator User Password"
+}
+
+
