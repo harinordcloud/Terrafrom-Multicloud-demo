@@ -49,16 +49,17 @@ module "public_subnet" {
   name               = "${var.environment}_public_subnet"
   environment        = var.environment
   vpc_id             = module.vpc.id
-  cidrs              = var.public_subnet_cidrs
+  cidrs              = var.public_subnet_cidrs_eu-central-1a
   availability_zones = var.availability_zones
 }
+
 
 
 module "nat" {
   source = "./aws-modules/nat_gateway"
 
   subnet_ids   = module.public_subnet.ids
-  subnet_count = length(var.public_subnet_cidrs)
+  subnet_count = length(var.public_subnet_cidrs_eu-central-1a)
 }
 
 resource "aws_route" "public_igw_route" {
@@ -119,7 +120,7 @@ resource "aws_security_group" "web_sg" {
 }
 
 
-resource "aws_instance" "web_instance" {
+resource "aws_instance" "web_instance_eu-central-1a" {
   ami           = "ami-0dcc0ebde7b2e00db"
   instance_type = "t2.micro"
   key_name      = "MyKeyPair"
@@ -132,6 +133,7 @@ resource "aws_instance" "web_instance" {
     "Name" : "Terraform POC - Web Instance"
   }
 }
+
 
 
 # Create a new load balancer
@@ -164,7 +166,7 @@ resource "aws_elb" "bar" {
   idle_timeout                = 400
   connection_draining         = true
   connection_draining_timeout = 400
-  subnets                     = module.public_subnet.ids
+  subnets                     = var.public_subnet_cidrs_eu-central-1a
 
   tags = {
     Name = "Website-terraform-elb"

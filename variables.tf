@@ -33,9 +33,9 @@ variable "private_subnet_cidrs" {
   description = "List of private cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
 }
 
-variable "public_subnet_cidrs" {
+variable "public_subnet_cidrs_eu-central-1a" {
   type        = list(any)
-  default   = ["10.0.2.0/24"]
+  default   = ["10.0.2.0/24", "10.0.3.0/24"]
   description = "List of public cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
 }
 
