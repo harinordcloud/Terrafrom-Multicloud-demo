@@ -63,7 +63,7 @@ module "nat" {
 }
 
 resource "aws_route" "public_igw_route" {
-  count                  = length(var.public_subnet_cidrs)
+  count                  = length(var.public_subnet_cidrs_eu-central-1a)
   route_table_id         = element(module.public_subnet.route_table_ids, count.index)
   gateway_id             = module.vpc.igw
   destination_cidr_block = var.destination_cidr_block
@@ -120,7 +120,7 @@ resource "aws_security_group" "web_sg" {
 }
 
 
-resource "aws_instance" "web_instance_eu-central-1a" {
+resource "aws_instance" "web_instance" {
   ami           = "ami-0dcc0ebde7b2e00db"
   instance_type = "t2.micro"
   key_name      = "MyKeyPair"
