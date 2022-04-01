@@ -136,7 +136,7 @@ resource "aws_instance" "web_instance" {
 # Create a new load balancer
 resource "aws_elb" "bar" {
   name               = "Website-terraform-elb"
-  availability_zones = ["eu-central-1a"]
+  availability_zones = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
 
   access_logs {
     bucket        = "foo"
@@ -164,7 +164,8 @@ resource "aws_elb" "bar" {
   idle_timeout                = 400
   connection_draining         = true
   connection_draining_timeout = 400
-
+  subnet_id                   = module.public_subnet.ids.0
+  
   tags = {
     Name = "Website-terraform-elb"
   }
