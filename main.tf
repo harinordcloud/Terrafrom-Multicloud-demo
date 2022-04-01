@@ -135,6 +135,20 @@ resource "aws_instance" "web_instance" {
 }
 
 
+resource "aws_instance" "web_instance1" {
+  ami           = "ami-0dcc0ebde7b2e00db"
+  instance_type = "t2.micro"
+  key_name      = "MyKeyPair"
+
+  subnet_id                   = module.public_subnet.ids.1
+  vpc_security_group_ids      = [aws_security_group.web_sg.id]
+  associate_public_ip_address = true
+
+  tags = {
+    "Name" : "Terraform POC - Web Instance"
+  }
+}
+
 
 # Create a new load balancer
 resource "aws_elb" "bar" {
@@ -162,7 +176,7 @@ resource "aws_elb" "bar" {
     interval            = 30
   }
 
-  instances                   = [aws_instance.web_instance.id]
+  instances                   = [aws_instance.web_instance.id,aws_instance.web_instance1.id]
   idle_timeout                = 400
   connection_draining         = true
   connection_draining_timeout = 400
@@ -171,7 +185,7 @@ resource "aws_elb" "bar" {
   tags = {
     Name = "Website-terraform-elb"
   }
-  depends_on                =  [aws_instance.web_instance]
+  depends_on                =  [aws_instance.web_instance, aws_instance.web_instance1]
 }
 
 
