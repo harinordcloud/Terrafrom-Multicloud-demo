@@ -155,11 +155,11 @@ resource "aws_elb" "bar" {
   name               = "Website-terraform-elb"
   #availability_zones = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
 
-  access_logs {
+  /* access_logs {
     bucket        = "foo"
     bucket_prefix = "bar"
     interval      = 60
-  }
+  } */
 
   listener {
     instance_port     = 8000
