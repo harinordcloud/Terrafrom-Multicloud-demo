@@ -161,7 +161,6 @@ resource "aws_elb" "bar" {
   }
 
   instances                   = [aws_instance.web_instance.id]
-  cross_zone_load_balancing   = False
   idle_timeout                = 400
   connection_draining         = true
   connection_draining_timeout = 400
