@@ -136,7 +136,7 @@ resource "aws_instance" "web_instance" {
 # Create a new load balancer
 resource "aws_elb" "bar" {
   name               = "Website-terraform-elb"
-  availability_zones = ["eu-central-1a", "eu-central-1b", "eu-central-1c"]
+  availability_zones = ["eu-central-1a"]
 
   access_logs {
     bucket        = "foo"
