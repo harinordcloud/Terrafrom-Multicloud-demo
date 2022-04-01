@@ -49,7 +49,7 @@ module "public_subnet" {
   name               = "${var.environment}_public_subnet"
   environment        = var.environment
   vpc_id             = module.vpc.id
-  cidrs              = var.public_subnet_cidrs_eu-central-1a
+  cidrs              = var.public_subnet_cidrs
   availability_zones = var.availability_zones
 }
 
