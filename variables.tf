@@ -29,7 +29,7 @@ variable "destination_cidr_block_rds" {
 
 variable "private_subnet_cidrs" {
   type        = list(any)
-  default   = ["10.0.1.0/24"]
+  default   = ["10.0.1.0/24","10.0.4.0/24"]
   description = "List of private cidrs, for every availability zone you want you need one. Example: 10.0.0.0/24 and 10.0.1.0/24"
 }
 
