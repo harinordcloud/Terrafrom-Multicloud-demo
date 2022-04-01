@@ -49,9 +49,10 @@ module "public_subnet" {
   name               = "${var.environment}_public_subnet"
   environment        = var.environment
   vpc_id             = module.vpc.id
-  cidrs              = var.public_subnet_cidrs
+  cidrs              = var.public_subnet_cidrs_eu-central-1a
   availability_zones = var.availability_zones
 }
+
 
 module "nat" {
   source = "./aws-modules/nat_gateway"
