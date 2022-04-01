@@ -164,8 +164,8 @@ resource "aws_elb" "bar" {
   idle_timeout                = 400
   connection_draining         = true
   connection_draining_timeout = 400
-  subnet_id                   = module.public_subnet.ids.0
-  
+  subnets                   = module.public_subnet
+
   tags = {
     Name = "Website-terraform-elb"
   }
